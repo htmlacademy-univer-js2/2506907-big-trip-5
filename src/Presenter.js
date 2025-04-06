@@ -1,6 +1,6 @@
-import Filters from './view/Filters.js';
-import Sorting from './view/Sorting.js';
-import CreateForm from './view/CreateForm.js';
+//import Filters from './view/Filters.js';
+//import Sorting from './view/Sorting.js';
+//import CreateForm from './view/CreateForm.js';
 import EditForm from './view/EditForm.js';
 import RoutePoint from './view/RoutePoint.js';
 import { createSampleData } from './Model.js';
@@ -11,21 +11,42 @@ export default class Presenter {
     this.routePoints = createSampleData(); // Получение временных данных
   }
 
-  render() {
-    const filters = new Filters();
-    const sorting = new Sorting();
-    const createForm = new CreateForm();
+  init() {
+    this.renderRoutePoints();
+  }
 
-    this.container.appendChild(createForm.element);
-    this.container.appendChild(filters.element);
-    this.container.appendChild(sorting.element);
-
+  renderRoutePoints() {
     this.routePoints.forEach((pointData) => {
       const routePoint = new RoutePoint(pointData);
-      this.container.appendChild(routePoint.element);
+      document.body.appendChild(routePoint.element);
+      this.addEventListeners(routePoint);
+    });
+  }
+
+  addEventListeners(routePoint) {
+    routePoint.element.querySelector('.edit-button').addEventListener('click', () => {
+      this.replaceWithEditForm(routePoint);
+    });
+  }
+
+  replaceWithEditForm(routePoint) {
+    const editForm = new EditForm(routePoint.data);
+    routePoint.element.replaceWith(editForm.element);
+    editForm.element.addEventListener('submit', (event) => {
+      event.preventDefault();
+      this.replaceWithRoutePoint(editForm);
     });
 
-    const editForm = new EditForm(this.routePoints[0]);
-    this.container.appendChild(editForm.element);
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        this.replaceWithRoutePoint(editForm);
+      }
+    });
+  }
+
+  replaceWithRoutePoint(editForm) {
+    const routePoint = new RoutePoint(editForm.data);
+    editForm.element.replaceWith(routePoint.element);
+    this.addEventListeners(routePoint);
   }
 }
