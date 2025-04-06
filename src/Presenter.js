@@ -3,12 +3,13 @@
 //import CreateForm from './view/CreateForm.js';
 import EditForm from './view/EditForm.js';
 import RoutePoint from './view/RoutePoint.js';
-import { createSampleData } from './Model.js';
+//import { createSampleData } from './Model.js';
+import { generateMockRoutePoints } from './MockPoints.js';
 
 export default class Presenter {
-  constructor(container) {
-    this.container = container;
-    this.routePoints = createSampleData(); // Получение временных данных
+  constructor() {
+    this.routePoints = generateMockRoutePoints(0); // Начинаем с 0 точек маршрута
+    this.routePointList = new RoutePoint(this.routePoints);
   }
 
   init() {
