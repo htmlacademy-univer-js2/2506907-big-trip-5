@@ -263,6 +263,17 @@ export default class EditForm extends AbstractStatefulView {
     this._callback.favorite(EditForm.parseStateToPoint(this._state));
   };
 
+  setDeleteClickHandler(callback) {
+    this._callback.delete = callback;
+    this.element.querySelector('.event__reset-btn')
+      .addEventListener('click', this.#deleteClickHandler);
+  }
+
+  #deleteClickHandler = (evt) => {
+    evt.preventDefault();
+    this._callback.delete(EditForm.parseStateToPoint(this._state));
+  };
+
   static parsePointToState(point) {
     return {
       ...point,

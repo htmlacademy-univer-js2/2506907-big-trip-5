@@ -1,21 +1,27 @@
 import RoutePointPresenter from './presenter/RoutePointPresenter.js';
 import Sorting from '../view/Sorting.js';
 import { generateMockRoutePoints } from '../mock/MockPoints.js';
+import RoutePointsModel from './RoutePointsModel.js';
+import FilterModel from './FilterModel.js';
 
 export default class Presenter {
-  constructor(container) {
+  constructor(container, routePointsModel, filterModel) {
     this.container = container;
-    this.routePoints = generateMockRoutePoints(10); // Генерируем 10 точек маршрута
+    this.routePoints = generateMockRoutePoints(10);
     this.routePointPresenters = new Map();
     this.currentSortType = 'day';
     this.sortingComponent = new Sorting(this.currentSortType);
     this.handleViewAction = this.handleViewAction.bind(this);
     this.handleModelEvent = this.handleModelEvent.bind(this);
+    this._routePointsModel = routePointsModel;
+    this._filterModel = filterModel;
   }
 
   init() {
     this.renderSorting();
     this.renderRoutePointsList();
+    this._renderRoutePoints();
+    this._filterModel.setFilterChangeHandler(this._handleFilterChange.bind(this));
   }
 
   renderSorting() {
@@ -108,4 +114,47 @@ export default class Presenter {
   handleModeChange() {
     this.routePointPresenters.forEach((presenter) => presenter.resetView());
   }
+
+  _handleFilterChange() {
+    this._renderRoutePoints();
+  }
+
+  _renderRoutePoints() {
+    const points = this._getFilteredPoints();
+  }
+
+  _getFilteredPoints() {
+    const filter = this._filterModel.getFilter();
+    const points = this._routePointsModel.getPoints();
+    switch (filter) {
+      case 'all':
+        return points;
+      case 'future':
+        return points.filter(point => new Date(point.dateFrom) > new Date());
+      case 'past':
+        return points.filter(point => new Date(point.dateTo) < new Date());
+      default:
+        return points;
+    }
+  }
+
+  addPoint(point) {
+    this._routePointsModel.addPoint(point);
+    this._renderRoutePoints();
+  }
+
+  deletePoint(pointId) {
+    this._routePointsModel.deletePoint(pointId);
+    this._renderRoutePoints();
+  }
+
+  setNewEventHandler(callback) {
+    this._callback.newEvent = callback;
+    this.element.querySelector('.new-event-btn')
+      .addEventListener('click', this.#newEventHandler);
+  }
+
+  #newEventHandler = () => {
+    this._callback.newEvent();
+  };
 }
