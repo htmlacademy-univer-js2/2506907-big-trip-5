@@ -1,24 +1,15 @@
 export default class RoutePoint {
   constructor(data) {
     this.data = data;
-    this.element = this.createElement();
   }
 
-  createElement() {
-    const element = document.createElement('div');
-    element.className = 'route-point';
-    element.innerHTML = `
-      <h3>${this.data.destination.cityName}</h3>
-      <p>${this.data.type}</p>
-      <button class="favorite-button ${this.data.isFavorite ? 'active' : ''}">
-        ★
-      </button>
-      <button class="edit-button">Редактировать</button>
+  get template() {
+    return `
+        <div class="route-point">
+            <h3>${this.data.type}</h3>
+            <p>${this.data.destination.cityName}: ${this.data.destination.description}</p>
+            <button class="edit-button">Edit</button>
+        </div>
     `;
-    return element;
-  }
-
-  render() {
-    return this.element;
   }
 }
