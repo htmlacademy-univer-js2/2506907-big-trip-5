@@ -74,4 +74,12 @@ export default class RoutePointPresenter {
     oldElement.replaceWith(this.routePointComponent.element);
     this.addEventListeners();
   }
+
+  destroy() {
+    if (this.editFormComponent) {
+      this.editFormComponent.element.remove();
+    }
+    this.routePointComponent.element.remove();
+  }
 }
+
