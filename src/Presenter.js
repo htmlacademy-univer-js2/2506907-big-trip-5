@@ -1,24 +1,37 @@
-export default class RoutePoint {
-  constructor(data) {
-    this.data = data;
-    this.element = this.createElement();
+import RoutePointPresenter from './presenter/RoutePointPresenter.js';
+import { generateMockRoutePoints } from './MockPoints.js';
+
+export default class Presenter {
+  constructor(container) {
+    this.container = container;
+    this.routePoints = generateMockRoutePoints(5);
+    this.routePointPresenters = {};
   }
 
-  createElement() {
-    const element = document.createElement('div');
-    element.className = 'route-point';
-    element.innerHTML = `
-      <h3>${this.data.destination.cityName}</h3>
-      <p>${this.data.type}</p>
-      <button class="favorite-button ${this.data.isFavorite ? 'active' : ''}">
-        ★
-      </button>
-      <button class="edit-button">Редактировать</button>
-    `;
-    return element;
+  init() {
+    this.renderRoutePoints();
   }
 
-  render() {
-    return this.element;
+  renderRoutePoints() {
+    this.routePoints.forEach((pointData) => {
+      const presenter = new RoutePointPresenter(
+        pointData,
+        this.handleDataChange.bind(this),
+        this.handleEditStart.bind(this)
+      );
+      presenter.init(this.container);
+      this.routePointPresenters[pointData.id] = presenter;
+    });
+  }
+
+  handleDataChange(updatedPoint) {
+    const index = this.routePoints.findIndex((point) => point.id === updatedPoint.id);
+    this.routePoints[index] = updatedPoint;
+  }
+
+  handleEditStart() {
+    Object.values(this.routePointPresenters).forEach((presenter) => {
+      presenter.resetView();
+    });
   }
 }
