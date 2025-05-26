@@ -82,3 +82,4 @@ export default class RoutePointPresenter {
     this.routePointComponent.element.remove();
   }
 }
+
