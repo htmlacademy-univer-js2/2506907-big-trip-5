@@ -1,5 +1,8 @@
 import AbstractStatefulView from './abstract-stateful-view.js';
 import { POINT_TYPES, DESTINATION_ITEMS } from '../const.js';
+import flatpickr from 'flatpickr';
+import dayjs from 'dayjs';
+import 'flatpickr/dist/flatpickr.min.css';
 
 export default class EditForm extends AbstractStatefulView {
   constructor(point = {}, destinations = [], offers = []) {
@@ -11,7 +14,7 @@ export default class EditForm extends AbstractStatefulView {
   }
 
   get template() {
-    const { type, destination, basePrice, isFavorite, offers } = this._state;
+    const { type, destination, basePrice, isFavorite, dateFrom, dateTo } = this._state;
     const currentDestination = this._destinations.find((d) => d.id === destination);
     const typeOffers = this._offers.find((offer) => offer.type === type)?.offers || [];
 
@@ -55,7 +58,11 @@ export default class EditForm extends AbstractStatefulView {
           </div>
 
           <div class="event__field-group event__field-group--time">
-            <!-- Поля для даты (реализуются через flatpickr) -->
+            <label class="event__label" for="event-start-time-1">Start</label>
+            <input class="event__input event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="${dayjs(dateFrom).format('DD/MM/YYYY HH:mm')}" required>
+            &mdash;
+            <label class="event__label" for="event-end-time-1">End</label>
+            <input class="event__input event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="${dayjs(dateTo).format('DD/MM/YYYY HH:mm')}" required>
           </div>
 
           <div class="event__field-group event__field-group--price">
@@ -91,7 +98,7 @@ export default class EditForm extends AbstractStatefulView {
                 <div class="event__offer-selector">
                   <input class="event__offer-checkbox visually-hidden" id="event-offer-${offer.id}"
                     type="checkbox" name="event-offer"
-                    ${offers.includes(offer.id) ? 'checked' : ''}
+                    ${offer.includes(offer.id) ? 'checked' : ''}
                     data-offer-id="${offer.id}">
                   <label class="event__offer-label" for="event-offer-${offer.id}">
                     <span class="event__offer-title">${offer.title}</span>
@@ -142,6 +149,38 @@ export default class EditForm extends AbstractStatefulView {
     this.setRollupButtonHandler(this._callback.rollup);
     this.setDeleteClickHandler(this._callback.delete);
     this.setFavoriteChangeHandler(this._callback.favorite);
+
+    flatpickr(this.element.querySelector('#event-start-time-1'), {
+      enableTime: true,
+      dateFormat: 'd/m/Y H:i',
+      defaultDate: this._state.dateFrom,
+      onChange: this.#onStartDateChange.bind(this),
+    });
+
+    flatpickr(this.element.querySelector('#event-end-time-1'), {
+      enableTime: true,
+      dateFormat: 'd/m/Y H:i',
+      defaultDate: this._state.dateTo,
+      onChange: this.#onEndDateChange.bind(this),
+    });
+  }
+
+  #onStartDateChange(selectedDates) {
+    this.updateElement({
+      dateFrom: selectedDates[0].toISOString(),
+      duration: this._calculateDuration(selectedDates[0], this._state.dateTo)
+    });
+  }
+
+  #onEndDateChange(selectedDates) {
+    this.updateElement({
+      dateTo: selectedDates[0].toISOString(),
+      duration: this._calculateDuration(this._state.dateFrom, selectedDates[0])
+    });
+  }
+
+  _calculateDuration(start, end) {
+    return dayjs(end).diff(dayjs(start), 'minute');
   }
 
   #typeChangeHandler = (evt) => {

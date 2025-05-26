@@ -1,16 +1,28 @@
 function generateMockRoutePoints(count) {
   const mockPoints = [];
+  const types = ['taxi', 'bus', 'train', 'ship', 'transport', 'drive'];
+  const cities = ['Moscow', 'Paris', 'Berlin', 'Tokyo', 'New York'];
+
   for (let i = 0; i < count; i++) {
+    const dateFrom = new Date();
+    dateFrom.setDate(dateFrom.getDate() + i);
+
+    const dateTo = new Date(dateFrom);
+    dateTo.setHours(dateTo.getHours() + Math.floor(Math.random() * 10) + 1);
+
     mockPoints.push({
       id: `point-${i}`,
-      type: ['taxi', 'bus', 'train'][Math.floor(Math.random() * 3)],
+      type: types[Math.floor(Math.random() * types.length)],
       destination: {
-        cityName: `City ${i + 1}`,
-        description: `Description for City ${i + 1}`
+        cityName: cities[Math.floor(Math.random() * cities.length)],
+        description: `Description for ${cities[Math.floor(Math.random() * cities.length)]}`
       },
-      isFavorite: Math.random() > 0.5
+      dateFrom: dateFrom.toISOString(),
+      dateTo: dateTo.toISOString(),
+      basePrice: Math.floor(Math.random() * 1000) + 100,
+      isFavorite: Math.random() > 0.5,
+      duration: dateTo.getTime() - dateFrom.getTime()
     });
-
   }
   return mockPoints;
 }
