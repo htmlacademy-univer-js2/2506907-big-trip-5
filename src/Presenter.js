@@ -1,162 +1,97 @@
-import RoutePointPresenter from './presenter/RoutePointPresenter.js';
-import Sorting from '../view/Sorting.js';
-import { generateMockRoutePoints } from '../mock/MockPoints.js';
-import RoutePointsModel from './RoutePointsModel.js';
-import FilterModel from './FilterModel.js';
+import RoutePoint from '../view/RoutePoint.js';
+import EditForm from '../view/EditForm.js';
+import { render, remove } from '../utils/render.js';
+import { formatDate } from '../utils/date.js';
+import { FilterType } from '../const.js';
 
-export default class Presenter {
-  constructor(container, routePointsModel, filterModel) {
-    this.container = container;
-    this.routePoints = generateMockRoutePoints(10);
-    this.routePointPresenters = new Map();
-    this.currentSortType = 'day';
-    this.sortingComponent = new Sorting(this.currentSortType);
-    this.handleViewAction = this.handleViewAction.bind(this);
-    this.handleModelEvent = this.handleModelEvent.bind(this);
+export default class RoutePresenter {
+  constructor(routePointsModel, filterModel, container) {
     this._routePointsModel = routePointsModel;
     this._filterModel = filterModel;
+    this._container = container;
+    this._routePointPresenters = new Map();
+    this._totalCost = 0;
   }
 
   init() {
-    this.renderSorting();
-    this.renderRoutePointsList();
     this._renderRoutePoints();
-    this._filterModel.setFilterChangeHandler(this._handleFilterChange.bind(this));
-  }
-
-  renderSorting() {
-    this.sortingComponent.setSortTypeChangeHandler(this.handleSortTypeChange.bind(this));
-    this.container.prepend(this.sortingComponent.getElement());
-  }
-
-  renderRoutePointsList() {
-    this.clearRoutePointsList();
-    this.renderRoutePoints(this.sortRoutePoints(this.routePoints));
-  }
-
-  renderRoutePoints(points) {
-    points.forEach((point) => this.renderRoutePoint(point));
-  }
-
-  renderRoutePoint(point) {
-    const pointPresenter = new RoutePointPresenter(
-      this.container,
-      this.handleViewAction,
-      this.handleModeChange.bind(this)
-    );
-    pointPresenter.init(point);
-    this.routePointPresenters.set(point.id, pointPresenter);
-  }
-
-  clearRoutePointsList() {
-    this.routePointPresenters.forEach((presenter) => presenter.destroy());
-    this.routePointPresenters.clear();
-  }
-
-  handleSortTypeChange(sortType) {
-    if (this.currentSortType === sortType) {
-      return;
-    }
-
-    this.currentSortType = sortType;
-    this.renderRoutePointsList();
-  }
-
-  sortRoutePoints(points) {
-    const sortedPoints = [...points];
-
-    switch (this.currentSortType) {
-      case 'time':
-        return sortedPoints.sort((a, b) => b.duration - a.duration);
-      case 'price':
-        return sortedPoints.sort((a, b) => b.basePrice - a.basePrice);
-      case 'day':
-      default:
-        return sortedPoints.sort((a, b) => new Date(a.dateFrom) - new Date(b.dateFrom));
-    }
-  }
-
-  handleViewAction(actionType, updateType, update) {
-    switch (actionType) {
-      case 'UPDATE_POINT':
-        this.routePoints = this.routePoints.map((point) =>
-          point.id === update.id ? update : point
-        );
-        this.routePointPresenters.get(update.id).init(update);
-        break;
-      case 'TOGGLE_FAVORITE':
-        this.routePoints = this.routePoints.map((point) =>
-          point.id === update.id ? { ...point, isFavorite: !point.isFavorite } : point
-        );
-        this.routePointPresenters.get(update.id).init(
-          this.routePoints.find((point) => point.id === update.id)
-        );
-        break;
-    }
-  }
-
-  handleModelEvent(updateType, data) {
-    switch (updateType) {
-      case 'PATCH':
-        this.routePointPresenters.get(data.id).init(data);
-        break;
-      case 'MINOR':
-        this.clearRoutePointsList();
-        this.renderRoutePointsList();
-        break;
-      case 'MAJOR':
-        this.clearRoutePointsList();
-        this.renderRoutePointsList();
-        break;
-    }
-  }
-
-  handleModeChange() {
-    this.routePointPresenters.forEach((presenter) => presenter.resetView());
-  }
-
-  _handleFilterChange() {
-    this._renderRoutePoints();
+    this._updateRouteInfo();
   }
 
   _renderRoutePoints() {
-    const points = this._getFilteredPoints();
-  }
-
-  _getFilteredPoints() {
-    const filter = this._filterModel.getFilter();
+    this._clearRoutePointsList();
     const points = this._routePointsModel.getPoints();
-    switch (filter) {
-      case 'all':
-        return points;
-      case 'future':
-        return points.filter(point => new Date(point.dateFrom) > new Date());
-      case 'past':
-        return points.filter(point => new Date(point.dateTo) < new Date());
-      default:
-        return points;
+
+    if (points.length === 0) {
+      this._renderNoPointsMessage();
+      return;
     }
+
+    points.forEach((point) => this._renderRoutePoint(point));
+    this._updateRouteInfo();
   }
 
-  addPoint(point) {
-    this._routePointsModel.addPoint(point);
-    this._renderRoutePoints();
+  _renderRoutePoint(point) {
+    const pointPresenter = new RoutePoint(
+      point,
+      this._handleViewAction.bind(this),
+      this._handleEditStart.bind(this)
+    );
+    pointPresenter.init(this._container);
+    this._routePointPresenters.set(point.id, pointPresenter);
   }
 
-  deletePoint(pointId) {
-    this._routePointsModel.deletePoint(pointId);
-    this._renderRoutePoints();
+  _clearRoutePointsList() {
+    this._routePointPresenters.forEach((presenter) => presenter.destroy());
+    this._routePointPresenters.clear();
   }
 
-  setNewEventHandler(callback) {
-    this._callback.newEvent = callback;
-    this.element.querySelector('.new-event-btn')
-      .addEventListener('click', this.#newEventHandler);
+  _renderNoPointsMessage() {
+    const noPointsMessage = document.createElement('div');
+    noPointsMessage.textContent = 'No points found';
+    this._container.append(noPointsMessage);
   }
 
-  #newEventHandler = () => {
-    this._callback.newEvent();
-  };
+  _updateRouteInfo() {
+    const points = this._routePointsModel.getPoints();
+    this._updateRouteDates(points);
+    this._updateRouteCost(points);
+    this._updateRouteNames(points);
+  }
+
+  _updateRouteDates(points) {
+    if (points.length === 0) {
+      document.querySelector('.trip-dates').textContent = '';
+      return;
+    }
+    const startDate = new Date(Math.min(...points.map(point => new Date(point.dateFrom))));
+    const endDate = new Date(Math.max(...points.map(point => new Date(point.dateTo))));
+    document.querySelector('.trip-dates').textContent = `${formatDate(startDate)} — ${formatDate(endDate)}`;
+  }
+
+  _updateRouteCost(points) {
+    this._totalCost = points.reduce((total, point) => {
+      const offersCost = point.offers.reduce((sum, offerId) => {
+        const offer = this._offers.find(o => o.id === offerId);
+        return sum + (offer ? offer.price : 0);
+      }, 0);
+      return total + point.basePrice + offersCost;
+    }, 0);
+    document.querySelector('.trip-cost').textContent = `€${this._totalCost}`;
+  }
+
+  _updateRouteNames(points) {
+    const routeNames = points.map(point => point.destination.name);
+    const uniqueRouteNames = [...new Set(routeNames)];
+
+    let routeDisplay;
+    if (uniqueRouteNames.length > 3) {
+      routeDisplay = `${uniqueRouteNames[0]} ... ${uniqueRouteNames[uniqueRouteNames.length - 1]}`;
+    } else {
+      routeDisplay = uniqueRouteNames.join(' — ');
+    }
+    document.querySelector('.trip-route').textContent = routeDisplay;
+  }
 
   _handleViewAction(actionType, updateType, update) {
     switch (actionType) {
@@ -174,5 +109,10 @@ export default class Presenter {
         this._renderRoutePoint(update);
         break;
     }
+    this._updateRouteInfo();
+  }
+
+  _handleEditStart() {
+    this._routePointPresenters.forEach((presenter) => presenter.resetView());
   }
 }
