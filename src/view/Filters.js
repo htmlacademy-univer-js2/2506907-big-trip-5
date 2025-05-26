@@ -1,4 +1,3 @@
-// src/view/Filters.js
 export default class Filters {
   constructor() {
     this.element = this.createElement();

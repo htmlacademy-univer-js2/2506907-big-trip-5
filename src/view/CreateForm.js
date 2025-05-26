@@ -1,4 +1,3 @@
-// src/view/CreateForm.js
 export default class CreateForm {
   constructor() {
     this.element = this.createElement();
