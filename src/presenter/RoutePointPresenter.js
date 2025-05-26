@@ -20,12 +20,10 @@ export default class RoutePointPresenter {
   }
 
   addEventListeners() {
-    // Обработчик для кнопки избранного
     this.routePointComponent.element.querySelector('.favorite-button').addEventListener('click', () => {
       this.toggleFavorite();
     });
 
-    // Обработчик для кнопки редактирования
     this.routePointComponent.element.querySelector('.edit-button').addEventListener('click', () => {
       this.openEditForm();
     });
@@ -33,13 +31,13 @@ export default class RoutePointPresenter {
 
   toggleFavorite() {
     this.pointData.isFavorite = !this.pointData.isFavorite;
-    this.onDataChange(this.pointData); // Обновляем данные
-    this.rerender(); // Перерисовываем компонент
+    this.onDataChange(this.pointData);
+    this.rerender();
   }
 
   openEditForm() {
     if (this.onEditStart) {
-      this.onEditStart(); // Уведомляем главный презентер о начале редактирования
+      this.onEditStart();
     }
     this.editFormComponent = new EditForm(this.pointData);
     this.routePointComponent.element.replaceWith(this.editFormComponent.element);
@@ -76,4 +74,12 @@ export default class RoutePointPresenter {
     oldElement.replaceWith(this.routePointComponent.element);
     this.addEventListeners();
   }
+
+  destroy() {
+    if (this.editFormComponent) {
+      this.editFormComponent.element.remove();
+    }
+    this.routePointComponent.element.remove();
+  }
 }
+
