@@ -27,16 +27,19 @@ export default class RoutePointsModel {
   async createPoint(point) {
     const newPoint = await this._api.createPoint(point);
     this._points.push(newPoint);
+    this._notifyRouteUpdate();
     return newPoint;
   }
 
   async deletePoint(pointId) {
     await this._api.deletePoint(pointId);
     this._points = this._points.filter(point => point.id !== pointId);
+    this._notifyRouteUpdate();
   }
 
   async updatePoint(updatedPoint) {
     const point = await this._api.updatePoint(updatedPoint.id, updatedPoint);
     this._points = this._points.map((p) => (p.id === point.id ? point : p));
+    this._notifyRouteUpdate();
   }
 }
