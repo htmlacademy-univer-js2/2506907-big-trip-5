@@ -1,0 +1,10 @@
+import RoutePointsModel from './model/RoutePointsModel.js';
+import FilterModel from './model/FilterModel.js';
+import RoutePresenter from './presenter/RoutePresenter.js';
+import FilterPresenter from './presenter/FilterPresenter.js';
+const routePointsModel = new RoutePointsModel();
+const filterModel = new FilterModel();
+const routePresenter = new RoutePresenter(routePointsModel, filterModel);
+const filterPresenter = new FilterPresenter(filterModel, document.querySelector('.filter-container'));
+routePresenter.init();
+filterPresenter.init();
