@@ -1,6 +1,11 @@
+import API from './api.js';
+
 export default class RoutePointsModel {
-  constructor() {
+  constructor(api) {
+    this._api = api;
     this._points = [];
+    this._destinations = [];
+    this._offers = [];
   }
 
   getPoints() {
@@ -11,18 +16,16 @@ export default class RoutePointsModel {
     this._points = points;
   }
 
-  addPoint(point) {
-    this._points.push(point);
+  setDestinations(destinations) {
+    this._destinations = destinations;
   }
 
-  updatePoint(updatedPoint) {
-    const index = this._points.findIndex(point => point.id === updatedPoint.id);
-    if (index !== -1) {
-      this._points[index] = updatedPoint;
-    }
+  setOffers(offers) {
+    this._offers = offers;
   }
 
-  deletePoint(pointId) {
-    this._points = this._points.filter(point => point.id !== pointId);
+  async updatePoint(updatedPoint) {
+    const point = await this._api.updatePoint(updatedPoint.id, updatedPoint);
+    this._points = this._points.map((p) => (p.id === point.id ? point : p));
   }
 }
