@@ -19,6 +19,23 @@ export default class API {
     return response;
   }
 
+  async createPoint(point) {
+    const response = await this._load({
+      url: '/points',
+      method: 'POST',
+      body: JSON.stringify(this._adaptPointToServer(point)),
+      headers: new Headers({'Content-Type': 'application/json'})
+    });
+    return this._adaptPointToClient(response);
+  }
+
+  async deletePoint(pointId) {
+    await this._load({
+      url: `/points/${pointId}`,
+      method: 'DELETE'
+    });
+  }
+
   async updatePoint(pointId, point) {
     const response = await this._load({
       url: `/points/${pointId}`,

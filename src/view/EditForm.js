@@ -289,4 +289,44 @@ export default class EditForm extends AbstractStatefulView {
     delete point.isDeleting;
     return point;
   }
+
+  #deleteClickHandler = async (evt) => {
+    evt.preventDefault();
+    this._setDeletingState(true);
+    try {
+      await this._callback.delete(EditForm.parseStateToPoint(this._state));
+    } catch (error) {
+      this._setDeletingState(false);
+      this._shake();
+    }
+  };
+
+  _setSavingState(isSaving) {
+    const saveButton = this.element.querySelector('.event__save-btn');
+    if (isSaving) {
+      saveButton.textContent = 'Saving...';
+      saveButton.disabled = true;
+    } else {
+      saveButton.textContent = 'Save';
+      saveButton.disabled = false;
+    }
+  }
+
+  _setDeletingState(isDeleting) {
+    const deleteButton = this.element.querySelector('.event__reset-btn');
+    if (isDeleting) {
+      deleteButton.textContent = 'Deleting...';
+      deleteButton.disabled = true;
+    } else {
+      deleteButton.textContent = 'Delete';
+      deleteButton.disabled = false;
+    }
+  }
+
+  _shake() {
+    this.element.style.animation = 'shake 0.6s';
+    this.element.addEventListener('animationend', () => {
+      this.element.style.animation = '';
+    });
+  }
 }
