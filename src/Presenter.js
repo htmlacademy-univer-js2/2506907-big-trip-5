@@ -157,4 +157,22 @@ export default class Presenter {
   #newEventHandler = () => {
     this._callback.newEvent();
   };
+
+  _handleViewAction(actionType, updateType, update) {
+    switch (actionType) {
+      case 'UPDATE_POINT':
+        this._routePointsModel.updatePoint(update);
+        this._routePointPresenters.get(update.id).init(update);
+        break;
+      case 'DELETE_POINT':
+        this._routePointsModel.deletePoint(update.id);
+        this._routePointPresenters.get(update.id).destroy();
+        this._routePointPresenters.delete(update.id);
+        break;
+      case 'ADD_POINT':
+        this._routePointsModel.createPoint(update);
+        this._renderRoutePoint(update);
+        break;
+    }
+  }
 }
