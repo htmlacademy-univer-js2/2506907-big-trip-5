@@ -1,15 +1,11 @@
-//import Filters from './view/Filters.js';
-//import Sorting from './view/Sorting.js';
-//import CreateForm from './view/CreateForm.js';
-import EditForm from './view/EditForm.js';
-import RoutePoint from './view/RoutePoint.js';
-//import { createSampleData } from './Model.js';
+import RoutePointPresenter from './presenter/RoutePointPresenter.js';
 import { generateMockRoutePoints } from './MockPoints.js';
 
 export default class Presenter {
-  constructor() {
-    this.routePoints = generateMockRoutePoints(0); // Начинаем с 0 точек маршрута
-    this.routePointList = new RoutePoint(this.routePoints);
+  constructor(container) {
+    this.container = container;
+    this.routePoints = generateMockRoutePoints(5);
+    this.routePointPresenters = {};
   }
 
   init() {
@@ -18,36 +14,24 @@ export default class Presenter {
 
   renderRoutePoints() {
     this.routePoints.forEach((pointData) => {
-      const routePoint = new RoutePoint(pointData);
-      document.body.appendChild(routePoint.element);
-      this.addEventListeners(routePoint);
+      const presenter = new RoutePointPresenter(
+        pointData,
+        this.handleDataChange.bind(this),
+        this.handleEditStart.bind(this)
+      );
+      presenter.init(this.container);
+      this.routePointPresenters[pointData.id] = presenter;
     });
   }
 
-  addEventListeners(routePoint) {
-    routePoint.element.querySelector('.edit-button').addEventListener('click', () => {
-      this.replaceWithEditForm(routePoint);
-    });
+  handleDataChange(updatedPoint) {
+    const index = this.routePoints.findIndex((point) => point.id === updatedPoint.id);
+    this.routePoints[index] = updatedPoint;
   }
 
-  replaceWithEditForm(routePoint) {
-    const editForm = new EditForm(routePoint.data);
-    routePoint.element.replaceWith(editForm.element);
-    editForm.element.addEventListener('submit', (event) => {
-      event.preventDefault();
-      this.replaceWithRoutePoint(editForm);
+  handleEditStart() {
+    Object.values(this.routePointPresenters).forEach((presenter) => {
+      presenter.resetView();
     });
-
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') {
-        this.replaceWithRoutePoint(editForm);
-      }
-    });
-  }
-
-  replaceWithRoutePoint(editForm) {
-    const routePoint = new RoutePoint(editForm.data);
-    editForm.element.replaceWith(routePoint.element);
-    this.addEventListeners(routePoint);
   }
 }
