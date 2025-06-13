@@ -40,7 +40,7 @@ export default class UiBlocker {
   block() {
     this.#startTime = Date.now();
     this.#timerId = setTimeout(() => {
-      this.#activateBlocking();
+      this.#addClass();
     }, this.#lowerLimit);
   }
 
@@ -55,26 +55,20 @@ export default class UiBlocker {
     }
 
     if (duration >= this.#upperLimit) {
-      this.#disactivateBlocking();
+      this.#removeClass();
       return;
     }
 
-    setTimeout(this.#disactivateBlocking, this.#upperLimit - duration);
+    setTimeout(this.#removeClass, this.#upperLimit - duration);
   }
 
-  /** Метод, добавляющий CSS-класс и обработчик */
-  #activateBlocking = () => {
+  /** Метод, добавляющий CSS-класс элементу */
+  #addClass = () => {
     this.#element.classList.add('ui-blocker--on');
-    document.addEventListener('keydown', this.#documentKeydownHandler);
   };
 
-  /** Метод, убирающий CSS-класс и обработчик */
-  #disactivateBlocking = () => {
+  /** Метод, убирающий CSS-класс с элемента */
+  #removeClass = () => {
     this.#element.classList.remove('ui-blocker--on');
-    document.removeEventListener('keydown', this.#documentKeydownHandler);
-  };
-
-  #documentKeydownHandler = (evt) => {
-    evt.preventDefault();
   };
 }
